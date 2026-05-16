@@ -1,0 +1,161 @@
+! ============================================================
+! ACCESS CONTROL LIST (ACL) CONFIGURATION — FINAL
+! Enterprise Multi-Site Network Implementation
+! Author: Hamza Mohamed
+! ============================================================
+! Security Policy:
+!   1. Sales (VLAN 30)  → CANNOT access IT VLAN 20
+!   2. Sales (VLAN 30)  → CANNOT access FTP Server
+!   3. Admin (VLAN 10)  → CANNOT access FTP Server
+!   4. Branch (VLAN 40,50) → CANNOT access IT or Admin VLANs
+!   5. Branch (VLAN 40,50) → CAN access Web + DNS only
+!   6. IT (VLAN 20)     → FULL access to everything
+!
+! Server IPs:
+!   DHCP Server: 192.168.10.2
+!   DNS Server : 192.168.10.3
+!   FTP Server : 192.168.10.4
+!   Web Server : 192.168.10.5
+!
+! ACLs applied on MLSwitch SVIs (inbound)
+! ============================================================
+
+
+! ============================================================
+! ACL — SALES VLAN 30
+! ============================================================
+
+MLSwitch# configure terminal
+
+MLSwitch(config)# ip access-list extended SALES_ACL
+
+! Deny Sales → IT VLAN
+MLSwitch(config-ext-nacl)# deny ip 192.168.3.0 0.0.0.255 192.168.2.0 0.0.0.255
+
+! Deny Sales → FTP Server
+MLSwitch(config-ext-nacl)# deny tcp 192.168.3.0 0.0.0.255 host 192.168.10.4 eq 21
+
+! Allow Sales → DNS Server
+MLSwitch(config-ext-nacl)# permit udp 192.168.3.0 0.0.0.255 host 192.168.10.3 eq 53
+
+! Allow Sales → Web Server
+MLSwitch(config-ext-nacl)# permit tcp 192.168.3.0 0.0.0.255 host 192.168.10.5 eq 80
+
+! Allow Sales → DHCP Server
+MLSwitch(config-ext-nacl)# permit ip 192.168.3.0 0.0.0.255 host 192.168.10.2
+
+! Permit all other Sales traffic
+MLSwitch(config-ext-nacl)# permit ip 192.168.3.0 0.0.0.255 any
+
+MLSwitch(config-ext-nacl)# exit
+
+! Apply inbound on Sales SVI
+MLSwitch(config)# interface vlan 30
+MLSwitch(config-if)# ip access-group SALES_ACL in
+MLSwitch(config-if)# exit
+
+
+! ============================================================
+! ACL — ADMIN VLAN 10
+! ============================================================
+
+MLSwitch(config)# ip access-list extended ADMIN_ACL
+
+! Deny Admin → FTP Server
+MLSwitch(config-ext-nacl)# deny tcp 192.168.1.0 0.0.0.255 host 192.168.10.4 eq 21
+
+! Allow Admin → DNS Server
+MLSwitch(config-ext-nacl)# permit udp 192.168.1.0 0.0.0.255 host 192.168.10.3 eq 53
+
+! Allow Admin → Web Server
+MLSwitch(config-ext-nacl)# permit tcp 192.168.1.0 0.0.0.255 host 192.168.10.5 eq 80
+
+! Allow Admin → DHCP Server
+MLSwitch(config-ext-nacl)# permit ip 192.168.1.0 0.0.0.255 host 192.168.10.2
+
+! Permit all other Admin traffic
+MLSwitch(config-ext-nacl)# permit ip 192.168.1.0 0.0.0.255 any
+
+MLSwitch(config-ext-nacl)# exit
+
+! Apply inbound on Admin SVI
+MLSwitch(config)# interface vlan 10
+MLSwitch(config-if)# ip access-group ADMIN_ACL in
+MLSwitch(config-if)# exit
+
+
+! ============================================================
+! ACL — BRANCH (Applied on Router B)
+! ============================================================
+
+RouterB# configure terminal
+
+RouterB(config)# ip access-list extended BRANCH_ACL
+
+! Deny Branch → FTP Server
+RouterB(config-ext-nacl)# deny tcp 192.168.4.0 0.0.0.255 host 192.168.10.4 eq 21
+RouterB(config-ext-nacl)# deny tcp 192.168.5.0 0.0.0.255 host 192.168.10.4 eq 21
+
+! Deny Branch → IT VLAN
+RouterB(config-ext-nacl)# deny ip 192.168.4.0 0.0.0.255 192.168.2.0 0.0.0.255
+RouterB(config-ext-nacl)# deny ip 192.168.5.0 0.0.0.255 192.168.2.0 0.0.0.255
+
+! Deny Branch → Admin VLAN
+RouterB(config-ext-nacl)# deny ip 192.168.4.0 0.0.0.255 192.168.1.0 0.0.0.255
+RouterB(config-ext-nacl)# deny ip 192.168.5.0 0.0.0.255 192.168.1.0 0.0.0.255
+
+! Allow Branch → DNS Server
+RouterB(config-ext-nacl)# permit udp 192.168.4.0 0.0.0.255 host 192.168.10.3 eq 53
+RouterB(config-ext-nacl)# permit udp 192.168.5.0 0.0.0.255 host 192.168.10.3 eq 53
+
+! Allow Branch → Web Server
+RouterB(config-ext-nacl)# permit tcp 192.168.4.0 0.0.0.255 host 192.168.10.5 eq 80
+RouterB(config-ext-nacl)# permit tcp 192.168.5.0 0.0.0.255 host 192.168.10.5 eq 80
+
+! Permit all other Branch traffic
+RouterB(config-ext-nacl)# permit ip 192.168.4.0 0.0.0.255 any
+RouterB(config-ext-nacl)# permit ip 192.168.5.0 0.0.0.255 any
+
+RouterB(config-ext-nacl)# exit
+
+! Apply inbound on Support interface
+RouterB(config)# interface GigabitEthernet0/0
+RouterB(config-if)# ip access-group BRANCH_ACL in
+RouterB(config-if)# exit
+
+! Apply inbound on Operations interface
+RouterB(config)# interface GigabitEthernet0/1
+RouterB(config-if)# ip access-group BRANCH_ACL in
+RouterB(config-if)# exit
+
+RouterB(config)# end
+RouterB# write memory
+
+
+! ============================================================
+! VERIFICATION — TEST CASES
+! ============================================================
+
+! ── From Sales PC (192.168.3.10) ─────────────────────────────
+! ping 192.168.2.10  → FAIL  (IT VLAN blocked)
+! ping 192.168.10.4  → FAIL  (FTP blocked)
+! ping 192.168.10.5  → PASS  (Web allowed)
+! ping 192.168.10.3  → PASS  (DNS allowed)
+
+! ── From Admin PC (192.168.1.10) ─────────────────────────────
+! ping 192.168.10.4  → FAIL  (FTP blocked)
+! ping 192.168.10.5  → PASS  (Web allowed)
+! ping 192.168.10.3  → PASS  (DNS allowed)
+
+! ── From Branch PC (192.168.4.10) ────────────────────────────
+! ping 192.168.10.4  → FAIL  (FTP blocked)
+! ping 192.168.2.10  → FAIL  (IT VLAN blocked)
+! ping 192.168.1.10  → FAIL  (Admin VLAN blocked)
+! ping 192.168.10.5  → PASS  (Web allowed)
+! ping 192.168.10.3  → PASS  (DNS allowed)
+
+! ── From IT PC (192.168.2.10) ────────────────────────────────
+! ping 192.168.10.2  → PASS  (Full access)
+! ping 192.168.10.3  → PASS  (Full access)
+! ping 192.168.10.4  → PASS  (Full access)
+! ping 192.168.10.5  → PASS  (Full access)

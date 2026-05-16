@@ -1,0 +1,524 @@
+! ============================================================
+! ACCESS SWITCHES FINAL CONFIGURATION
+! Enterprise Multi-Site Network Implementation
+! Author: Hamza Mohamed
+! ============================================================
+! HQ SWITCHES:
+!   Switch1 → Admin     VLAN 10 → MLSwitch Gi1/3
+!   Switch2 → IT        VLAN 20 → MLSwitch Gi1/4
+!   Switch3 → Sales     VLAN 30 → MLSwitch Gi1/5
+!   Switch4 → Servers   VLAN 100→ MLSwitch Gi1/6
+! BRANCH SWITCHES:
+!   Switch5 → Support   VLAN 40 → Router B Gi0/0
+!   Switch6 → Operations VLAN 50→ Router B Gi0/1
+! ============================================================
+
+
+! ============================================================
+! SWITCH1 — ADMIN (HQ) — VLAN 10
+! ============================================================
+! Fa0/1 → PC0   Fa0/2 → PC1
+! Fa0/3 → PC2   Fa0/4 → PC19
+! Fa0/5 → MLSwitch Gi1/3
+! ============================================================
+
+enable
+configure terminal
+hostname Switch1
+
+vlan 10
+name Admin
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 10
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 10
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 10
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 10
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode trunk
+switchport trunk allowed vlan 10
+switchport trunk native vlan 10
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 10
+ip address 192.168.1.2 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.1.1
+
+end
+write memory
+
+
+! ============================================================
+! SWITCH2 — IT (HQ) — VLAN 20
+! ============================================================
+! Fa0/1 → PC3   Fa0/2 → PC4
+! Fa0/3 → PC5   Fa0/4 → PC20
+! Fa0/5 → MLSwitch Gi1/4
+! ============================================================
+
+enable
+configure terminal
+hostname Switch2
+
+vlan 20
+name IT
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 20
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 20
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 20
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 20
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode trunk
+switchport trunk allowed vlan 20
+switchport trunk native vlan 20
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 20
+ip address 192.168.2.2 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.2.1
+
+end
+write memory
+
+
+! ============================================================
+! SWITCH3 — SALES (HQ) — VLAN 30
+! ============================================================
+! Fa0/1 → PC6   Fa0/2 → PC7
+! Fa0/3 → PC8   Fa0/4 → PC18
+! Fa0/5 → MLSwitch Gi1/5
+! ============================================================
+
+enable
+configure terminal
+hostname Switch3
+
+vlan 30
+name Sales
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 30
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 30
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 30
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 30
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode trunk
+switchport trunk allowed vlan 30
+switchport trunk native vlan 30
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 30
+ip address 192.168.3.2 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.3.1
+
+end
+write memory
+
+
+! ============================================================
+! SWITCH4 — SERVERS (HQ) — VLAN 100
+! ============================================================
+! Fa0/1 → DHCP Server   Fa0/2 → DNS Server
+! Fa0/3 → FTP Server    Fa0/4 → Web Server
+! Fa0/5 → MLSwitch Gi1/6
+! ============================================================
+
+enable
+configure terminal
+hostname Switch4
+
+vlan 100
+name Servers
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 100
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 100
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 100
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 100
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode trunk
+switchport trunk allowed vlan 100
+switchport trunk native vlan 100
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 100
+ip address 192.168.10.3 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.10.1
+
+end
+write memory
+
+
+! ============================================================
+! SWITCH5 — SUPPORT (BRANCH) — VLAN 40
+! ============================================================
+! Fa0/1 → PC12  Fa0/2 → PC13
+! Fa0/3 → PC15  Fa0/4 → PC16
+! Fa0/5 → Router B Gi0/0
+! ============================================================
+
+enable
+configure terminal
+hostname Switch5
+
+vlan 40
+name Support
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 40
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 40
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 40
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 40
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode access
+switchport access vlan 40
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 40
+ip address 192.168.4.2 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.4.1
+
+end
+write memory
+
+
+! ============================================================
+! SWITCH6 — OPERATIONS (BRANCH) — VLAN 50
+! ============================================================
+! Fa0/1 → PC9   Fa0/2 → PC10
+! Fa0/3 → PC11  Fa0/4 → PC17
+! Fa0/5 → Router B Gi0/1
+! ============================================================
+
+enable
+configure terminal
+hostname Switch6
+
+vlan 50
+name Operations
+exit
+
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 50
+no shutdown
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 50
+no shutdown
+exit
+
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 50
+no shutdown
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 50
+no shutdown
+exit
+
+interface fastEthernet 0/5
+switchport mode access
+switchport access vlan 50
+no shutdown
+exit
+
+interface range fastEthernet 0/6 - 24
+shutdown
+exit
+
+interface vlan 50
+ip address 192.168.5.2 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.5.1
+
+end
+write memory
+
+
+
+! ============================================================
+! MLSWITCH — MULTILAYER SWITCH FINAL CONFIGURATION
+! ============================================================
+! PORT MAPPING:
+!   Gi1/3 → Switch1 (Admin    - VLAN 10)
+!   Gi1/4 → Switch2 (IT       - VLAN 20)
+!   Gi1/5 → Switch3 (Sales    - VLAN 30)
+!   Gi1/6 → Switch4 (Servers  - VLAN 100)
+!   Gi1/7 → Router A (192.168.100.1)
+
+! ============================================================
+
+enable
+configure terminal
+hostname MLSwitch
+
+! ── Enable IP Routing and DHCP ───────────────────────────────
+ip routing
+service dhcp
+
+! ── Create VLANs ─────────────────────────────────────────────
+vlan 10
+name Admin
+exit
+vlan 20
+name IT
+exit
+vlan 30
+name Sales
+exit
+vlan 100
+name Servers
+exit
+
+! ── SVI Interfaces (Gateway for each VLAN) ───────────────────
+interface vlan 10
+ip address 192.168.1.1 255.255.255.0
+ip helper-address 192.168.10.2
+no shutdown
+exit
+
+interface vlan 20
+ip address 192.168.2.1 255.255.255.0
+ip helper-address 192.168.10.2
+no shutdown
+exit
+
+interface vlan 30
+ip address 192.168.3.1 255.255.255.0
+ip helper-address 192.168.10.2
+no shutdown
+exit
+
+interface vlan 100
+ip address 192.168.10.1 255.255.255.0
+no shutdown
+exit
+
+! ── Trunk Port to Switch1 (Admin - VLAN 10) ──────────────────
+interface GigabitEthernet1/3
+switchport mode trunk
+switchport trunk allowed vlan 10
+switchport trunk native vlan 10
+no shutdown
+exit
+
+! ── Trunk Port to Switch2 (IT - VLAN 20) ─────────────────────
+interface GigabitEthernet1/4
+switchport mode trunk
+switchport trunk allowed vlan 20
+switchport trunk native vlan 20
+no shutdown
+exit
+
+! ── Trunk Port to Switch3 (Sales - VLAN 30) ──────────────────
+interface GigabitEthernet1/5
+switchport mode trunk
+switchport trunk allowed vlan 30
+switchport trunk native vlan 30
+no shutdown
+exit
+
+! ── Trunk Port to Switch4 (Servers - VLAN 100) ───────────────
+interface GigabitEthernet1/6
+switchport mode trunk
+switchport trunk allowed vlan 100
+switchport trunk native vlan 100
+no shutdown
+exit
+
+! ── Routed Uplink to Router A ────────────────────────────────
+interface GigabitEthernet1/7
+no switchport
+ip address 192.168.100.2 255.255.255.252
+no shutdown
+exit
+
+! ── Static Routes ────────────────────────────────────────────
+! Default route to Router A
+ip route 0.0.0.0 0.0.0.0 192.168.100.1
+
+! Routes to Branch networks via Router A
+ip route 192.168.4.0 255.255.255.0 192.168.100.1
+ip route 192.168.5.0 255.255.255.0 192.168.100.1
+ip route 192.168.200.0 255.255.255.252 192.168.100.1
+
+! ── OSPF Configuration ───────────────────────────────────────
+router ospf 1
+router-id 3.3.3.3
+network 192.168.1.0 0.0.0.255 area 0
+network 192.168.2.0 0.0.0.255 area 0
+network 192.168.3.0 0.0.0.255 area 0
+network 192.168.10.0 0.0.0.255 area 0
+network 192.168.100.0 0.0.0.3 area 0
+exit
+
+! ── Disable Unused Ports ─────────────────────────────────────
+interface GigabitEthernet1/1
+shutdown
+exit
+interface GigabitEthernet1/2
+shutdown
+exit
+interface GigabitEthernet1/8
+shutdown
+exit
+interface GigabitEthernet1/9
+shutdown
+exit
+interface GigabitEthernet1/10
+shutdown
+exit
+
+end
+write memory
+
+

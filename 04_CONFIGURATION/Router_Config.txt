@@ -1,0 +1,131 @@
+! ============================================================
+! ROUTER CONFIGURATION — FINAL
+! Enterprise Multi-Site Network Implementation
+! Author: Hamza Mohamed
+! ============================================================
+! NETWORK DESIGN:
+!   Router A (HQ)     → connects to MLSwitch via Gi0/0
+!                     → connects to Router B via Serial0/0/0
+!   Router B (Branch) → connects to Switch5 via Gi0/0
+!                     → connects to Switch6 via Gi0/1
+!                     → connects to Router A via Serial0/0/0
+! ============================================================
+
+
+! ============================================================
+! ROUTER A — HEADQUARTERS
+! ============================================================
+
+enable
+configure terminal
+hostname RouterA
+
+! ── Basic Security ───────────────────────────────────────────
+enable secret cisco123
+line console 0
+password cisco
+login
+exit
+line vty 0 4
+password cisco
+login
+exit
+service password-encryption
+banner motd # Authorized Access Only — RouterA HQ #
+
+! ── LAN Interface to MLSwitch ────────────────────────────────
+interface GigabitEthernet0/0
+ip address 192.168.100.1 255.255.255.252
+no shutdown
+description Link to MLSwitch
+exit
+
+! ── WAN Interface to Router B ────────────────────────────────
+interface serial 0/0/0
+ip address 192.168.200.1 255.255.255.252
+no shutdown
+description WAN Link to Branch RouterB
+exit
+
+! ── Static Routes to HQ VLANs via MLSwitch ───────────────────
+ip route 192.168.1.0 255.255.255.0 192.168.100.2
+ip route 192.168.2.0 255.255.255.0 192.168.100.2
+ip route 192.168.3.0 255.255.255.0 192.168.100.2
+ip route 192.168.10.0 255.255.255.0 192.168.100.2
+
+! ── Static Routes to Branch networks via Router B ────────────
+ip route 192.168.4.0 255.255.255.0 192.168.200.2
+ip route 192.168.5.0 255.255.255.0 192.168.200.2
+
+! ── OSPF Configuration ───────────────────────────────────────
+router ospf 1
+router-id 1.1.1.1
+network 192.168.100.0 0.0.0.3 area 0
+network 192.168.200.0 0.0.0.3 area 0
+exit
+
+end
+write memory
+
+
+! ============================================================
+! ROUTER B — BRANCH OFFICE
+! ============================================================
+
+enable
+configure terminal
+hostname RouterB
+
+! ── Basic Security ───────────────────────────────────────────
+enable secret cisco123
+line console 0
+password cisco
+login
+exit
+line vty 0 4
+password cisco
+login
+exit
+service password-encryption
+banner motd # Authorized Access Only — RouterB Branch #
+
+! ── WAN Interface to Router A ────────────────────────────────
+interface serial 0/0/0
+ip address 192.168.200.2 255.255.255.252
+no shutdown
+description WAN Link to HQ RouterA
+exit
+
+! ── LAN Interface to Switch5 (Support VLAN 40) ───────────────
+interface GigabitEthernet0/0
+ip address 192.168.4.1 255.255.255.0
+ip helper-address 192.168.10.2
+no shutdown
+description Support VLAN 40
+exit
+
+! ── LAN Interface to Switch6 (Operations VLAN 50) ────────────
+interface GigabitEthernet0/1
+ip address 192.168.5.1 255.255.255.0
+ip helper-address 192.168.10.2
+no shutdown
+description Operations VLAN 50
+exit
+
+! ── Static Routes to HQ networks via Router A ────────────────
+ip route 192.168.1.0 255.255.255.0 192.168.200.1
+ip route 192.168.2.0 255.255.255.0 192.168.200.1
+ip route 192.168.3.0 255.255.255.0 192.168.200.1
+ip route 192.168.10.0 255.255.255.0 192.168.200.1
+ip route 192.168.100.0 255.255.255.252 192.168.200.1
+
+! ── OSPF Configuration ───────────────────────────────────────
+router ospf 1
+router-id 2.2.2.2
+network 192.168.4.0 0.0.0.255 area 0
+network 192.168.5.0 0.0.0.255 area 0
+network 192.168.200.0 0.0.0.3 area 0
+exit
+
+end
+write memory

@@ -1,0 +1,113 @@
+! ============================================================
+! ROUTING CONFIGURATION — FINAL
+! Enterprise Multi-Site Network Implementation
+! Author: Hamza Mohamed
+! ============================================================
+! Routing Design:
+!   - OSPF between Router A, Router B, and MLSwitch
+!   - Static routes used where OSPF cannot advertise SVIs
+!   - Full connectivity between all sites achieved
+! ============================================================
+
+
+! ============================================================
+! OSPF CONFIGURATION
+! ============================================================
+
+! ── Router A OSPF ────────────────────────────────────────────
+RouterA(config)# router ospf 1
+RouterA(config-router)# router-id 1.1.1.1
+RouterA(config-router)# network 192.168.100.0 0.0.0.3 area 0
+RouterA(config-router)# network 192.168.200.0 0.0.0.3 area 0
+RouterA(config-router)# exit
+
+! ── Router B OSPF ────────────────────────────────────────────
+RouterB(config)# router ospf 1
+RouterB(config-router)# router-id 2.2.2.2
+RouterB(config-router)# network 192.168.4.0 0.0.0.255 area 0
+RouterB(config-router)# network 192.168.5.0 0.0.0.255 area 0
+RouterB(config-router)# network 192.168.200.0 0.0.0.3 area 0
+RouterB(config-router)# exit
+
+! ── MLSwitch OSPF ────────────────────────────────────────────
+MLSwitch(config)# router ospf 1
+MLSwitch(config-router)# router-id 3.3.3.3
+MLSwitch(config-router)# network 192.168.1.0 0.0.0.255 area 0
+MLSwitch(config-router)# network 192.168.2.0 0.0.0.255 area 0
+MLSwitch(config-router)# network 192.168.3.0 0.0.0.255 area 0
+MLSwitch(config-router)# network 192.168.10.0 0.0.0.255 area 0
+MLSwitch(config-router)# network 192.168.100.0 0.0.0.3 area 0
+MLSwitch(config-router)# exit
+
+
+! ============================================================
+! STATIC ROUTES
+! ============================================================
+
+! ── Router A Static Routes ───────────────────────────────────
+! Routes to HQ VLANs via MLSwitch
+RouterA(config)# ip route 192.168.1.0 255.255.255.0 192.168.100.2
+RouterA(config)# ip route 192.168.2.0 255.255.255.0 192.168.100.2
+RouterA(config)# ip route 192.168.3.0 255.255.255.0 192.168.100.2
+RouterA(config)# ip route 192.168.10.0 255.255.255.0 192.168.100.2
+! Routes to Branch networks via Router B
+RouterA(config)# ip route 192.168.4.0 255.255.255.0 192.168.200.2
+RouterA(config)# ip route 192.168.5.0 255.255.255.0 192.168.200.2
+
+! ── Router B Static Routes ───────────────────────────────────
+! Routes to all HQ networks via Router A
+RouterB(config)# ip route 192.168.1.0 255.255.255.0 192.168.200.1
+RouterB(config)# ip route 192.168.2.0 255.255.255.0 192.168.200.1
+RouterB(config)# ip route 192.168.3.0 255.255.255.0 192.168.200.1
+RouterB(config)# ip route 192.168.10.0 255.255.255.0 192.168.200.1
+RouterB(config)# ip route 192.168.100.0 255.255.255.252 192.168.200.1
+
+! ── MLSwitch Static Routes ───────────────────────────────────
+! Default route to Router A
+MLSwitch(config)# ip route 0.0.0.0 0.0.0.0 192.168.100.1
+! Routes to Branch networks via Router A
+MLSwitch(config)# ip route 192.168.4.0 255.255.255.0 192.168.100.1
+MLSwitch(config)# ip route 192.168.5.0 255.255.255.0 192.168.100.1
+MLSwitch(config)# ip route 192.168.200.0 255.255.255.252 192.168.100.1
+
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+! ── Check OSPF Neighbors ─────────────────────────────────────
+! On Router A — expect 2 neighbors: MLSwitch(3.3.3.3) + RouterB(2.2.2.2)
+RouterA# show ip ospf neighbor
+
+! On Router B — expect 1 neighbor: RouterA(1.1.1.1)
+RouterB# show ip ospf neighbor
+
+! On MLSwitch — expect 1 neighbor: RouterA(1.1.1.1)
+MLSwitch# show ip ospf neighbor
+
+! ── Check Routing Tables ─────────────────────────────────────
+RouterA# show ip route
+RouterB# show ip route
+MLSwitch# show ip route
+
+! ── Ping Tests ───────────────────────────────────────────────
+! Router A → DHCP Server
+RouterA# ping 192.168.10.2
+
+! Router A → Router B
+RouterA# ping 192.168.200.2
+
+! Router A → Branch Support gateway
+RouterA# ping 192.168.4.1
+
+! Router B → DHCP Server
+RouterB# ping 192.168.10.2
+
+! Router B → MLSwitch
+RouterB# ping 192.168.100.2
+
+! MLSwitch → DHCP Server
+MLSwitch# ping 192.168.10.2
+
+! MLSwitch → Router B
+MLSwitch# ping 192.168.200.2
