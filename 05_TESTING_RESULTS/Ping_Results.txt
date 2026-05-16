@@ -1,0 +1,159 @@
+============================================================
+PING TEST RESULTS
+Enterprise Multi-Site Network Implementation
+Author: Hamza Mohamed
+============================================================
+
+============================================================
+TEST 1 — INTRA-VLAN (Admin VLAN 10)
+From: PC2 → To: PC1 (192.168.1.11)
+============================================================
+
+C:\>ping 192.168.1.11
+
+Pinging 192.168.1.11 with 32 bytes of data:
+
+Reply from 192.168.1.11: bytes=32 time<1ms TTL=128
+Reply from 192.168.1.11: bytes=32 time<1ms TTL=128
+Reply from 192.168.1.11: bytes=32 time<1ms TTL=128
+Reply from 192.168.1.11: bytes=32 time=1ms TTL=128
+
+Ping statistics for 192.168.1.11:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 1ms, Average = 0ms
+
+RESULT: PASS ✅ — 0% packet loss, TTL=128 (same subnet)
+
+============================================================
+TEST 2 — INTER-VLAN (Admin → IT)
+From: PC2 (192.168.1.x) → To: 192.168.2.10 (IT VLAN 20)
+============================================================
+
+C:\>ping 192.168.2.10
+
+Pinging 192.168.2.10 with 32 bytes of data:
+
+Request timed out.
+Reply from 192.168.2.10: bytes=32 time<1ms TTL=127
+Reply from 192.168.2.10: bytes=32 time=1ms TTL=127
+Reply from 192.168.2.10: bytes=32 time<1ms TTL=127
+
+Ping statistics for 192.168.2.10:
+    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss)
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 1ms, Average = 0ms
+
+RESULT: PASS ✅ — First packet ARP timeout (normal), TTL=127 (routed by MLSwitch)
+
+============================================================
+TEST 3 — INTER-VLAN (Admin → Sales)
+From: PC2 (192.168.1.x) → To: 192.168.3.10 (Sales VLAN 30)
+============================================================
+
+C:\>ping 192.168.3.10
+
+Pinging 192.168.3.10 with 32 bytes of data:
+
+Request timed out.
+Reply from 192.168.3.10: bytes=32 time<1ms TTL=127
+Reply from 192.168.3.10: bytes=32 time=1ms TTL=127
+Reply from 192.168.3.10: bytes=32 time<1ms TTL=127
+
+Ping statistics for 192.168.3.10:
+    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss)
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 1ms, Average = 0ms
+
+RESULT: PASS ✅ — First packet ARP timeout (normal), TTL=127 (routed by MLSwitch)
+
+============================================================
+TEST 4 — INTER-SITE (Branch → HQ Admin)
+From: Branch PC → To: 192.168.1.10 (Admin VLAN 10)
+============================================================
+
+C:\>ping 192.168.1.10
+
+Pinging 192.168.1.10 with 32 bytes of data:
+
+Request timed out.
+Reply from 192.168.1.10: bytes=32 time=1ms TTL=125
+Reply from 192.168.1.10: bytes=32 time=1ms TTL=125
+Reply from 192.168.1.10: bytes=32 time=1ms TTL=125
+
+Ping statistics for 192.168.1.10:
+    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss)
+Approximate round trip times in milli-seconds:
+    Minimum = 1ms, Maximum = 1ms, Average = 1ms
+
+RESULT: PASS ✅ — TTL=125 confirms multi-hop routing across WAN link
+
+============================================================
+TTL ANALYSIS
+============================================================
+
+TTL value decreases by 1 per routing hop:
+
+TTL=128 → Same subnet (no routing)
+TTL=127 → 1 hop (MLSwitch routing between VLANs)
+TTL=126 → 2 hops
+TTL=125 → 3 hops (Branch → Router B → Router A → MLSwitch → HQ)
+
+This confirms traffic is taking the correct path through the network.
+
+============================================================
+OSPF NEIGHBOR TABLE — ROUTER A
+============================================================
+
+RouterA#show ip ospf neighbor
+
+Neighbor ID   Pri   State     Dead Time   Address          Interface
+3.3.3.3        1    FULL/DR   00:00:38    192.168.100.2    GigabitEthernet0/0
+2.2.2.2        0    FULL/-    00:00:39    192.168.200.2    Serial0/0/0
+
+RESULT: PASS ✅ — Both neighbors FULL state
+
+============================================================
+OSPF NEIGHBOR TABLE — ROUTER B
+============================================================
+
+RouterB#show ip ospf neighbor
+
+Neighbor ID   Pri   State     Dead Time   Address          Interface
+1.1.1.1        0    FULL/-    00:00:34    192.168.200.1    Serial0/0/0
+
+RESULT: PASS ✅ — Neighbor FULL state
+
+============================================================
+ROUTING TABLE — ROUTER A
+============================================================
+
+RouterA#show ip route
+
+S    192.168.1.0/24  [1/0] via 192.168.100.2
+S    192.168.2.0/24  [1/0] via 192.168.100.2
+S    192.168.3.0/24  [1/0] via 192.168.100.2
+O    192.168.4.0/24  [110/65] via 192.168.200.2, Serial0/0/0
+O    192.168.5.0/24  [110/65] via 192.168.200.2, Serial0/0/0
+S    192.168.10.0/24 [1/0] via 192.168.100.2
+C    192.168.100.0/30 is directly connected, GigabitEthernet0/0
+C    192.168.200.0/30 is directly connected, Serial0/0/0
+
+RESULT: PASS ✅ — All 8 networks present in routing table
+
+============================================================
+ROUTING TABLE — ROUTER B
+============================================================
+
+RouterB#show ip route
+
+S    192.168.1.0/24  [1/0] via 192.168.200.1
+S    192.168.2.0/24  [1/0] via 192.168.200.1
+S    192.168.3.0/24  [1/0] via 192.168.200.1
+C    192.168.4.0/24  is directly connected, GigabitEthernet0/0
+C    192.168.5.0/24  is directly connected, GigabitEthernet0/1
+S    192.168.10.0/24 [1/0] via 192.168.200.1
+S    192.168.100.0/30 [1/0] via 192.168.200.1
+C    192.168.200.0/30 is directly connected, Serial0/0/0
+
+RESULT: PASS ✅ — All 8 networks present in routing table
